@@ -1,6 +1,20 @@
 class Api::V1::EntriesController < ApplicationController
   def index
     entries = Entry.all.includes(:tags)
+
+    if params[:search].present?
+      entries = entries.where("title ILIKE ?", "%#{params[:search]}%")
+    end
+
+    allowed = ["title", "date"]
+    direction = %w[asc desc].include?(params[:order]) ? params[:order] : "asc"
+    
+    if allowed.include?(params[:sort_by])
+      entries = entries.order(params[:sort_by] => direction)
+    else
+      entries = entries.order(date: :asc)
+    end
+
     render json: entries, include: :tags
   end
 
